@@ -1,0 +1,25 @@
+﻿.nav-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-drawer .mud-toolbar {
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-drawer .page-header {
+    display: flex;
+    align-items: center;
+}
+
+.app-drawer .user-info {
+    display: flex;
+    align-items: center;
+}
+
+.login-form {
+    margin-inline: 25%;
+}

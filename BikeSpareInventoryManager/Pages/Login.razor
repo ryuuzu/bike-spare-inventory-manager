@@ -1,0 +1,51 @@
+﻿@page "/login"
+@using BikeSpareInventoryManager.Data;
+@using BikeSpareInventoryManager.Data.Model;
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+
+<MudForm @ref="LoginForm" Class="login-form">
+    <MudCard Elevation="3">
+        <MudCardHeader><MudText Typo="Typo.h4">Login</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="Username" T="string" Required="true" Label="Username" RequiredError="Username is required!" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="Password" T="string" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Variant="Variant.Outlined" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleLogin">Login</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudForm>
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+
+    MudForm LoginForm;
+
+    private string Username;
+    private string Password;
+
+
+    protected async Task OnInitializedAsync()
+    {
+        _globalState.PageName = "Login";
+    }
+
+    private void HandleLogin()
+    {
+        List<User> LoggedUser = UserService.LoginUser(Username, Password);
+        if (LoggedUser.Count >= 1)
+        {
+            _globalState.CurrentUser = LoggedUser[0];
+            NavManager.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add("Incorrect Username/Password!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            LoginForm.Reset();
+        }
+    }
+
+}

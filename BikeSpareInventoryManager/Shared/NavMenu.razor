@@ -1,0 +1,12 @@
+﻿@using BikeSpareInventoryManager.Data;
+<MudNavMenu>
+    <MudDrawerHeader Class="nav-header">
+        <MudIcon Icon="@Icons.Rounded.BikeScooter" Title="Favorite" />
+        <MudText Typo="Typo.h6">Janata Garage</MudText>
+    </MudDrawerHeader>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+</MudNavMenu>
+
+@code {
+    private GlobalState _globalState { get; set; }
+}
