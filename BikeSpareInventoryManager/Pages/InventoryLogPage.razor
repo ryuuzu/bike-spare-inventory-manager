@@ -1,0 +1,109 @@
+﻿@page "/inventory-logs"
+
+@using BikeSpareInventoryManager.Data;
+@using BikeSpareInventoryManager.Data.Model;
+@inject NavigationManager NavManager
+
+<MudContainer Class="mt-8 position-relative">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@inventoryLogs" Hover="true" Striped="false" Filter="new Func<InventoryLog,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Inventory</MudText>
+            <MudSpacer />
+            <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Item</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Requested By</MudTh>
+            <MudTh>Approved By</MudTh>
+            <MudTh>Date Taken Out</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Item">@context.ItemId</MudTd>
+            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+            <MudTd DataLabel="Requested By">@context.RequestedBy</MudTd>
+            <MudTd DataLabel="Approved By">
+                @if (context.ApprovedBy == default)
+                {
+                    <MudText>N/A</MudText>
+                }
+                else
+                {
+                    @context.ApprovedBy
+                }
+            </MudTd>
+            <MudTd DataLabel="Date Taken Out">
+                @if (context.ApprovedAt == default)
+                {
+                    <MudText>N/A</MudText>
+                }
+                else
+                {
+                    @context.ApprovedAt
+                }
+            </MudTd>
+            <MudTd DataLabel="Approve?">
+                @if (!context.IsApproved)
+                {
+                    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+                    {
+                        <MudButton StartIcon="@Icons.Material.Rounded.Approval" Variant="Variant.Outlined" Color="Color.Primary">Approve</MudButton>
+                    }
+                    else
+                    {
+                        <MudText>Not Approved</MudText>
+                    }
+                }
+                else
+                {
+                    <MudText>Approved</MudText>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    // Global State of the Application
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+
+    private string toSearch = ""; //String to use for searching in the table
+    private InventoryLog selectedItem = null;
+
+    private IEnumerable<InventoryLog> inventoryLogs = new List<InventoryLog>();
+
+
+    private bool FilterHandler(InventoryLog item) => SearchFilter(item, toSearch);
+
+    private bool SearchFilter(InventoryLog item, string searchString)
+    {
+        if (_globalState.CurrentUser != null)
+        {
+            if (_globalState.CurrentUser.UserType == UserType.Staff && !item.RequestedBy.Equals(_globalState.CurrentUser.Guid))
+            {
+                return false;
+            }
+        }
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Condition check if user is not logged in.
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login"); //Navigating to login
+        }
+
+        _globalState.PageName = "Inventory Logs"; // Setting the pagename to display in drawer
+
+        inventoryLogs = InventoryLogService.SetupInventoryLogs(); // Setting up the inventory for processing
+    }
+}

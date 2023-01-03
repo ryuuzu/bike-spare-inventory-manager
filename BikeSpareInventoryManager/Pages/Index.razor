@@ -1,17 +1,24 @@
 ﻿@page "/"
 @using BikeSpareInventoryManager.Data;
+@using BikeSpareInventoryManager.Data.Model;
 @inject NavigationManager NavManager
 
-<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+<MudContainer Class="mt-8 px-8" MaxWidth="MaxWidth.False">
     <MudGrid>
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
+                <MudText Typo="Typo.h4">Total Items</MudText>
+                <MudText Typo="Typo.h6">@CurrentInventory.InventoryItems.Count</MudText>
+            </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
+                <MudText Typo="Typo.h4">Total Users</MudText>
+                <MudText Typo="Typo.h6">@AllUsers.Count</MudText>
+            </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 150px;"></MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6">
             <MudGrid>
@@ -26,15 +33,6 @@
         <MudItem xs="12" sm="6">
             <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-        </MudItem>
     </MudGrid>
 </MudContainer>
 
@@ -42,10 +40,16 @@
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
 
+    private Inventory CurrentInventory;
+    private List<User> AllUsers;
+
 
     protected override async Task OnInitializedAsync()
     {
         _globalState.PageName = "Dashboard";
+
+        CurrentInventory = InventoryService.SetupInventory();
+        AllUsers = UserService.SetupUsers();
 
         if (_globalState.CurrentUser == null)
         {

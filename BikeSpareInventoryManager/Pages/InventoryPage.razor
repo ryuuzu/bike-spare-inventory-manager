@@ -1,0 +1,128 @@
+﻿@page "/inventory"
+@inject NavigationManager NavManager
+
+@using BikeSpareInventoryManager.Data
+@using BikeSpareInventoryManager.Data.Model
+@using BikeSpareInventoryManager.Data.Forms
+
+<MudContainer Class="mt-8 position-relative">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@CurrentItems" Hover="true" Striped="false" Filter="new Func<InventoryItem,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Inventory</MudText>
+            <MudSpacer />
+            <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Created At</MudTh>
+            <MudTh>Last Updated</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Price">Rs. @context.Price</MudTd>
+            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+            <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+            <MudTd DataLabel="Last Updated">
+                @if (context.LastUpdated == default)
+                {
+                    <MudText>N/A</MudText>
+                }
+                else
+                {
+                    @context.LastUpdated
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudFab Class="position-absolute" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ToggleAddPopover" Style="bottom:10px; right:10px;" />
+</MudContainer>
+
+
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@ShowAddPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+    <EditForm Model="@_itemAddForm" OnValidSubmit="ProcessItemDetails">
+        <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField Label="Name" @bind-Value="_itemAddForm.Name" For="@(() => _itemAddForm.Name)" />
+            <MudTextField Label="Description" @bind-Value="_itemAddForm.Description" For="@(() => _itemAddForm.Description)" Lines="5" />
+            <MudTextField Label="Price" @bind-Value="_itemAddForm.Price" InputType="InputType.Number" For="@(() => _itemAddForm.Price)" />
+            <MudTextField Label="Quantity" @bind-Value="_itemAddForm.Quantity" InputType="InputType.Number" For="@(() => _itemAddForm.Quantity)" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddPopover">Close</MudButton>
+        </MudCardActions>
+    </EditForm>
+</MudPopover>
+
+@code {
+    // Global State of the Application
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private bool ShowAddPopOver = false; // Bool value to display the popovers
+
+    private ItemAdditionForm _itemAddForm = new(); //Form to add items into the system
+
+    private string toSearch = ""; //String to use for searching in the table
+    private InventoryItem selectedItem = null;
+
+    private Inventory CurrentInventory;
+    private IEnumerable<InventoryItem> CurrentItems = new List<InventoryItem>();
+
+    private bool FilterHandler(InventoryItem item) => SearchFilter(item, toSearch);
+
+    private bool SearchFilter(InventoryItem item, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (item.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Condition check if user is not logged in.
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login"); //Navigating to login
+        }
+
+        _globalState.PageName = "Inventory"; // Setting the pagename to display in drawer
+
+        CurrentInventory = InventoryService.SetupInventory(); // Setting up the inventory for processing
+        CurrentItems = CurrentInventory.InventoryItems; // Assigning Items stored in inventory to display in Table
+    }
+
+    private void ProcessItemDetails()
+    {
+        CurrentInventory.AddItem(_itemAddForm.GetInventoryItem());
+        InventoryService.SaveInventory(CurrentInventory);
+        RefreshInventory();
+        ToggleAddPopover();
+        ResetAddForm();
+    }
+
+    private void ResetAddForm()
+    {
+        _itemAddForm.Name = "";
+        _itemAddForm.Description = "";
+        _itemAddForm.Price = 0.00F;
+        _itemAddForm.Quantity = 0;
+    }
+
+    private void ToggleAddPopover()
+    {
+        ShowAddPopOver = !ShowAddPopOver;
+    }
+
+    private void RefreshInventory()
+    {
+        CurrentInventory = InventoryService.SetupInventory();
+        CurrentItems = CurrentInventory.InventoryItems;
+    }
+}

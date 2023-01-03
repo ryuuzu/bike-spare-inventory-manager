@@ -12,14 +12,22 @@ namespace BikeSpareInventoryManager.Data.Model
     {
         private DateTime _lastUpdated;
         private DateTime _createdAt;
-        private int _quantity;
         public Guid Guid { get; set; } = Guid.NewGuid();
-        public Item Item { get; set; }
-        public int Quantity { get { return _quantity; } }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public float Price { get; set; }
+        public int Quantity { get; set; } = 0;
 
         public DateTime CreatedAt
         {
             get { return _createdAt; }
+            set
+            {
+                if (_createdAt == DateTime.MinValue)
+                {
+                    _createdAt = value;
+                }
+            }
         }
 
         public DateTime LastUpdated
@@ -34,10 +42,19 @@ namespace BikeSpareInventoryManager.Data.Model
 
         public void DecreaseQuantity(int ToDecrease)
         {
-            if (_quantity < ToDecrease && _quantity > 0)
+            if (Quantity == 0)
+            {
+                throw new ItemOutOfStock("Item is out of stock.");
+            }
+            if (Quantity < ToDecrease && Quantity > 0)
             {
                 throw new LowItemStock("Item stock is lower than amount requested.");
             }
+        }
+
+        public static implicit operator Guid(InventoryItem v)
+        {
+            throw new NotImplementedException();
         }
     }
 }

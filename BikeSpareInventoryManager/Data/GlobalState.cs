@@ -12,5 +12,8 @@ namespace BikeSpareInventoryManager.Data
     {
         public string PageName { get; set; } = "Home";
         public User CurrentUser { get; set; } = null;
+
+        public bool DrawerOpen { get; set; } = true;
+        public bool IsDarkMode { get; set; }
     }
 }

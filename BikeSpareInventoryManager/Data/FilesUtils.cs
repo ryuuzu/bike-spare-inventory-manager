@@ -25,5 +25,9 @@ namespace BikeSpareInventoryManager.Data
         {
             return Path.Combine(GetAppDirectoryPath(), "inventory.json");
         }
+        public static string GetInventoryLogsFilePath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "inventory_logs.json");
+        }
     }
 }

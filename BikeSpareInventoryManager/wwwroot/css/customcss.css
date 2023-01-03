@@ -1,10 +1,12 @@
-﻿.nav-header {
+﻿/*CSS for Navigation Menu Header*/
+.nav-header {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
 }
 
+/*CSS for app top bar*/
 .app-drawer .mud-toolbar {
     align-items: center;
     justify-content: space-between;
@@ -20,6 +22,11 @@
     align-items: center;
 }
 
+.app-drawer .top-bar-controls {
+    display: flex;
+}
+
+/*CSS for login form*/
 .login-form {
     margin-inline: 25%;
 }

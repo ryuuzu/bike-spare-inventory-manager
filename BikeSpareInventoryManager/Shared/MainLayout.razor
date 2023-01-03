@@ -2,11 +2,12 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavManager
 
-<MudThemeProvider />
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_globalState.IsDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
+
     @if (_globalState.CurrentUser != null)
     {
         <MudAppBar Class="app-drawer">
@@ -14,14 +15,18 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
                 <MudText Typo="@Typo.h6">@_globalState.PageName</MudText>
             </div>
-            <div class="user-info">
-                <span>Hello, @_globalState.CurrentUser.FirstName</span> <MudIconButton Icon="@Icons.Rounded.Logout" Color="Color.Inherit" OnClick="@((e) => HandleLogout())" />
+            <div class="top-bar-controls">
+                <MudToggleIconButton @bind-Toggled="@_globalState.IsDarkMode" Color="Color.Inherit" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.LightMode" />
+                <div class="user-info">
+                    <span>Hello, @_globalState.CurrentUser.FirstName</span> <MudIconButton Icon="@Icons.Rounded.Logout" Color="Color.Inherit" OnClick="@((e) => HandleLogout())" />
+                </div>
             </div>
         </MudAppBar>
-        <MudDrawer @bind-Open="@_drawerOpen">
+        <MudDrawer ClipMode="DrawerClipMode.Always" @bind-Open="@_globalState.DrawerOpen">
             <NavMenu />
         </MudDrawer>
     }
+
     <MudMainContent Class="px-3">
         <CascadingValue Value="@_globalState">
             @Body
@@ -30,17 +35,30 @@
 </MudLayout>
 @code {
     private GlobalState _globalState = new();
+    private MudThemeProvider _mudThemeProvider;
 
-    bool _drawerOpen = true;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _globalState.IsDarkMode = await _mudThemeProvider.GetSystemPreference();
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDarkMode()
+    {
+        _globalState.IsDarkMode = !_globalState.IsDarkMode;
+    }
 
     private void HandleLogout()
     {
-        _globalState.CurrentUser = null;
         NavManager.NavigateTo("/login");
+        _globalState.CurrentUser = null;
     }
 
     void DrawerToggle()
     {
-        _drawerOpen = !_drawerOpen;
+        _globalState.DrawerOpen = !_globalState.DrawerOpen;
     }
 }

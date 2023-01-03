@@ -18,15 +18,15 @@ namespace BikeSpareInventoryManager.Data
             {
                 UsersList = LoadAll();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 UsersList = new List<User>
                 {
-                    new User{Username="adminboy", FirstName="Ram", LastName="Bahadur", UserType="Admin", Email="ram.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Ram@123")},
-                    new User{Username="admingirl", FirstName="Sita", LastName="Bahadurni", UserType="Admin", Email="sita.bahadurni@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
-                    new User{Username="userboy", FirstName="Ramu", LastName="Kumar", UserType="Staff", Email="ramu.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Ram@123")},
-                    new User{Username="usergirl", FirstName="Situ", LastName="Kumari", UserType="Staff", Email="situ.bahadurni@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
-                    new User{Username="random", FirstName="Random", LastName="Kumari", UserType="Staff", Email="random.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
+                    new User{Username="adminboy", FirstName="Ram", LastName="Bahadur", UserType=UserType.Admin, Email="ram.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Ram@123")},
+                    new User{Username="admingirl", FirstName="Sita", LastName="Bahadurni", UserType=UserType.Admin, Email="sita.bahadurni@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
+                    new User{Username="userboy", FirstName="Ramu", LastName="Kumar", UserType=UserType.Staff, Email="ramu.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Ram@123")},
+                    new User{Username="usergirl", FirstName="Situ", LastName="Kumari", UserType=UserType.Staff, Email="situ.bahadurni@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
+                    new User{Username="random", FirstName="Random", LastName="Kumari", UserType=UserType.Staff, Email="random.bahadur@janatagarage.com.np", Password = HelperService.ConvertHash("Sita@123")},
                 };
                 SaveAll(UsersList);
             }

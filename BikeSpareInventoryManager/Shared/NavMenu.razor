@@ -1,12 +1,16 @@
 ﻿@using BikeSpareInventoryManager.Data;
+
 <MudNavMenu>
     <MudDrawerHeader Class="nav-header">
         <MudIcon Icon="@Icons.Rounded.BikeScooter" Title="Favorite" />
         <MudText Typo="Typo.h6">Janata Garage</MudText>
     </MudDrawerHeader>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <MudNavLink Href="/" Icon="@Icons.Material.Rounded.Dashboard" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <MudNavLink Href="/inventory" Icon="@Icons.Material.Rounded.Inventory" Match="NavLinkMatch.All">Inventory</MudNavLink>
+    <MudNavLink Href="/users" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Users</MudNavLink>
+    <MudNavLink Href="/inventory-logs" Icon="@Icons.Material.Rounded.History" Match="NavLinkMatch.All">Inventory Logs</MudNavLink>
 </MudNavMenu>
 
+
 @code {
-    private GlobalState _globalState { get; set; }
 }

@@ -23,7 +23,9 @@ public static class MauiProgram
 #endif
 		
 		builder.Services.AddSingleton<UserService>();
-		builder.Services.AddSingleton<FilesUtils>();
+		builder.Services.AddSingleton<InventoryService>();
+		builder.Services.AddSingleton<InventoryLogService>();
+        builder.Services.AddSingleton<FilesUtils>();
 		builder.Services.AddSingleton<HelperService>();
 
 		return builder.Build();

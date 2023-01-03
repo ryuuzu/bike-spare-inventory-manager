@@ -10,20 +10,27 @@ namespace BikeSpareInventoryManager.Data.Model
     public class Inventory
     {
         private List<InventoryItem> _inventoryItems;
-        private List<Item> _allItems;
 
         public List<InventoryItem> InventoryItems { get { return _inventoryItems; } }
-        public List<Item> AllItems { get { return _allItems; } }
 
-        public Inventory(List<InventoryItem> InvItems, List<Item> Items)
+        public Inventory(List<InventoryItem> InvItems)
         {
             _inventoryItems = InvItems;
-            _allItems = Items;
+        }
+
+        public void AddItem(InventoryItem InvItem)
+        {
+            _inventoryItems.Add(InvItem);
         }
 
         public string GetSaveJSON()
         {
-            return JsonSerializer.Serialize(this);
+            return JsonSerializer.Serialize(this.InventoryItems);
+        }
+
+        public Inventory(string InventoryJSON)
+        {
+            _inventoryItems = JsonSerializer.Deserialize<List<InventoryItem>>(InventoryJSON);
         }
     }
 }

@@ -1,0 +1,139 @@
+﻿@page "/users"
+@inject NavigationManager NavManager
+
+@using BikeSpareInventoryManager.Data
+@using BikeSpareInventoryManager.Data.Forms;
+@using BikeSpareInventoryManager.Data.Model
+@inject ISnackbar Snackbar
+
+<MudContainer Class="mt-8">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllUsers" Hover="true" Striped="false" Filter="new Func<User, bool>(FilterHandler)" @bind-SelectedItem="SelectedUser">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Users</MudText>
+            <MudSpacer />
+            <MudTextField T="string" @bind-Value="ToSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Username</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>User Type</MudTh>
+            <MudTh>Email Address</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Username">@context.Username</MudTd>
+            <MudTd DataLabel="Name">@context.FirstName @context.LastName</MudTd>
+            <MudTd DataLabel="User Type">@context.UserType</MudTd>
+            <MudTd DataLabel="Email Address">@context.Email</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudFab Class="position-absolute" Color="Color.Primary" OnClick="ToggleAddPopover" StartIcon="@Icons.Material.Filled.Add" Style="bottom:10px; right:10px;" />
+</MudContainer>
+
+
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@ShowAddPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+    <EditForm Model="@_userAddForm" OnValidSubmit="ProcessUserDetails">
+        <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField Label="Username" @bind-Value="_userAddForm.Username" For="@(() => _userAddForm.Username)" />
+            <MudTextField Label="FirstName" @bind-Value="_userAddForm.FirstName" For="@(() => _userAddForm.FirstName)" />
+            <MudTextField Label="LastName" @bind-Value="_userAddForm.LastName" For="@(() => _userAddForm.LastName)" />
+            <MudRadioGroup @bind-SelectedOption="_userAddForm.UserType">
+                <MudRadio Option="UserType.Staff" Color="Color.Primary">Staff</MudRadio>
+                <MudRadio Option="UserType.Admin" Color="Color.Primary">Admin</MudRadio>
+            </MudRadioGroup>
+            <MudTextField Label="Email" @bind-Value="_userAddForm.Email" For="@(() => _userAddForm.Email)" />
+            <MudTextField Label="Password" @bind-Value="_userAddForm.Password" For="@(() => _userAddForm.Password)" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddPopover">Close</MudButton>
+        </MudCardActions>
+    </EditForm>
+</MudPopover>
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private bool ShowAddPopOver = false; // Bool value to display the popovers
+
+    private UserAdditionForm _userAddForm = new(); //Form to add items into the system
+
+
+    private string ToSearch = "";
+    private User SelectedUser = null;
+
+    private IEnumerable<User> AllUsers = new List<User>();
+
+    private bool FilterHandler(User user) => SearchFilter(user, ToSearch);
+
+    private bool SearchFilter(User user, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (user.Username.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (user.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{user.FirstName} {user.LastName}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void ProcessUserDetails()
+    {
+        List<User> AllUsersData = AllUsers.ToList(); //Converting the IEnumerable Collection to proper List.
+        User UserToAdd = _userAddForm.GetUser();
+
+        if (UserToAdd.UserType == UserType.Admin && AllUsersData.Where(User => User.UserType == UserType.Admin).ToList().Count >= 2)
+        {
+            Snackbar.Add("Total Admin Limit Reached!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
+        else if (AllUsersData.Where(User => UserToAdd.Username == User.Username).ToList().Count >= 1)
+        {
+            Snackbar.Add("Username is not available!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
+        else
+        {
+            AllUsersData.Add(UserToAdd);
+            UserService.SaveAll(AllUsersData);
+            RefreshUsers();
+        }
+
+        ToggleAddPopover();
+        ResetAddForm();
+    }
+
+    private void ResetAddForm()
+    {
+        _userAddForm.Username = "";
+        _userAddForm.FirstName = "";
+        _userAddForm.LastName = "";
+        _userAddForm.UserType = UserType.Staff;
+        _userAddForm.Email = "";
+        _userAddForm.Password = "";
+    }
+
+    private void ToggleAddPopover()
+    {
+        ShowAddPopOver = !ShowAddPopOver;
+    }
+
+    private void RefreshUsers()
+    {
+        AllUsers = UserService.SetupUsers();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _globalState.PageName = "Users";
+
+        AllUsers = UserService.SetupUsers();
+
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+    }
+}
