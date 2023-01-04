@@ -1,5 +1,6 @@
 ﻿@page "/inventory"
 @inject NavigationManager NavManager
+@inject ISnackbar Snackbar
 
 @using BikeSpareInventoryManager.Data
 @using BikeSpareInventoryManager.Data.Model
@@ -13,25 +14,33 @@
             <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
         </ToolBarContent>
         <HeaderContent>
-            <MudTh>Name</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<InventoryItem, object>(invItem => invItem.Name)">Name</MudTableSortLabel></MudTh>
             <MudTh>Price</MudTh>
             <MudTh>Quantity</MudTh>
             <MudTh>Created At</MudTh>
             <MudTh>Last Updated</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Price">Rs. @context.Price</MudTd>
             <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
-            <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+            <MudTd DataLabel="Created At">@context.CreatedAt.ToString("MMMM dd, yyyy")</MudTd>
             <MudTd DataLabel="Last Updated">
-                @if (context.LastUpdated == default)
+                @if (_globalState.InvLogsManager.GetLastUpdatedDate(context.Guid) == default)
                 {
                     <MudText>N/A</MudText>
                 }
                 else
                 {
-                    @context.LastUpdated
+                    @_globalState.InvLogsManager.GetLastUpdatedDate(context.Guid).ToString("MMMM dd, yyyy")
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Rounded.Remove" OnClick="@(() => ToggleWithdrawFromStockPopover(context.Guid))">Withdraw</MudButton> &nbsp;
+                @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Add" OnClick="@(() => ToggleAddToStockPopover(context.Guid))">Add</MudButton>
                 }
             </MudTd>
         </RowTemplate>
@@ -39,11 +48,40 @@
             <MudTablePager />
         </PagerContent>
     </MudTable>
-    <MudFab Class="position-absolute" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ToggleAddPopover" Style="bottom:10px; right:10px;" />
+    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+    {
+        <MudFab Class="position-absolute" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ToggleAddItemPopover" Style="bottom:10px; right:10px;" />
+    }
 </MudContainer>
 
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@addQuantityPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+    <MudForm @ref="_addQuantityForm">
+        <MudCardHeader><MudText Typo="Typo.h4">Add More Stock</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="quantityToAdd" T="int" Required="true" Label="Quantity" RequiredError="Quantity is required!" Variant="Variant.Outlined" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="AddToInventory">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="@(() => ToggleAddToStockPopover(null))">Close</MudButton>
+        </MudCardActions>
+    </MudForm>
+</MudPopover>
 
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@ShowAddPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@withdrawPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+    <MudForm @ref="_withdrawForm">
+        <MudCardHeader><MudText Typo="Typo.h4">Withdraw Item</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="quantityToWithdraw" T="int" Required="true" Label="Quantity" RequiredError="Quantity is required!" Variant="Variant.Outlined" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="WithdrawFromInventory">Withdraw</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="@(() => ToggleWithdrawFromStockPopover(null))">Close</MudButton>
+        </MudCardActions>
+    </MudForm>
+</MudPopover>
+
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@ShowAddItemPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
     <EditForm Model="@_itemAddForm" OnValidSubmit="ProcessItemDetails">
         <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
         <MudCardContent>
@@ -54,7 +92,7 @@
         </MudCardContent>
         <MudCardActions>
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto">Add</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddPopover">Close</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddItemPopover">Close</MudButton>
         </MudCardActions>
     </EditForm>
 </MudPopover>
@@ -63,9 +101,18 @@
     // Global State of the Application
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
-    private bool ShowAddPopOver = false; // Bool value to display the popovers
+    private Guid? _activeItem = null;
 
     private ItemAdditionForm _itemAddForm = new(); //Form to add items into the system
+    private bool ShowAddItemPopOver = false; // Bool value to display the popovers
+
+    private MudForm _withdrawForm; //Form to withdraw the item
+    private bool withdrawPopOver = false; //Bool value to display the withdraw item popover
+    private int quantityToWithdraw = 0; //Default value to withdraw from the inventory
+
+    private MudForm _addQuantityForm; //Form to add more item.
+    private bool addQuantityPopOver = false; //Bool value to display the add more item popover
+    private int quantityToAdd = 0; //Default value to add to the inventory
 
     private string toSearch = ""; //String to use for searching in the table
     private InventoryItem selectedItem = null;
@@ -84,6 +131,45 @@
         return false;
     }
 
+    private void AddToInventory()
+    {
+        if (_activeItem == null)
+        {
+            Snackbar.Add("Item Doesn't Exist! Please try again.", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            _addQuantityForm.Reset();
+            ToggleAddToStockPopover(null);
+            return;
+        }
+        Guid itemGuid = _activeItem ?? new Guid();
+        CurrentInventory.AddItemStock(itemGuid, quantityToAdd);
+        InventoryService.SaveInventory(CurrentInventory);
+        InventoryLog invLog = new() { ItemId = itemGuid, Quantity = quantityToAdd, LogType = InvLogType.Add, LogAuthor = _globalState.CurrentUser.Guid, LogDate = DateTime.Now };
+        InventoryLogService.AddInventoryLog(invLog);
+        RefreshInventory();
+        _addQuantityForm.Reset();
+        ToggleAddToStockPopover(null);
+    }
+
+    private void WithdrawFromInventory()
+    {
+
+        if (_activeItem == null)
+        {
+            Snackbar.Add("Item Doesn't Exist! Please try again.", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            _withdrawForm.Reset();
+            ToggleWithdrawFromStockPopover(null);
+            return;
+        }
+        Guid itemGuid = _activeItem ?? new Guid();
+        InventoryLog invLog = new() { ItemId = itemGuid, Quantity = quantityToWithdraw, LogType = InvLogType.Withdraw, LogAuthor = _globalState.CurrentUser.Guid, LogDate = DateTime.Now };
+        InventoryLogService.AddInventoryLog(invLog);
+        RefreshInventory();
+        _withdrawForm.Reset();
+        ToggleWithdrawFromStockPopover(null);
+        Snackbar.Add("Item has been requested.", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+
+    }
+
     protected override async Task OnInitializedAsync()
     {
         // Condition check if user is not logged in.
@@ -93,6 +179,8 @@
         }
 
         _globalState.PageName = "Inventory"; // Setting the pagename to display in drawer
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
 
         CurrentInventory = InventoryService.SetupInventory(); // Setting up the inventory for processing
         CurrentItems = CurrentInventory.InventoryItems; // Assigning Items stored in inventory to display in Table
@@ -103,7 +191,7 @@
         CurrentInventory.AddItem(_itemAddForm.GetInventoryItem());
         InventoryService.SaveInventory(CurrentInventory);
         RefreshInventory();
-        ToggleAddPopover();
+        ToggleAddItemPopover();
         ResetAddForm();
     }
 
@@ -115,9 +203,22 @@
         _itemAddForm.Quantity = 0;
     }
 
-    private void ToggleAddPopover()
+    private void ToggleAddItemPopover()
     {
-        ShowAddPopOver = !ShowAddPopOver;
+        ShowAddItemPopOver = !ShowAddItemPopOver;
+    }
+
+    private void ToggleAddToStockPopover(Guid? guid)
+    {
+        _activeItem = guid;
+        addQuantityPopOver = !addQuantityPopOver;
+    }
+
+
+    private void ToggleWithdrawFromStockPopover(Guid? guid)
+    {
+        _activeItem = guid;
+        withdrawPopOver = !withdrawPopOver;
     }
 
     private void RefreshInventory()

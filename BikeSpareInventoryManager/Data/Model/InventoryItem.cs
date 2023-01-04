@@ -50,6 +50,7 @@ namespace BikeSpareInventoryManager.Data.Model
             {
                 throw new LowItemStock("Item stock is lower than amount requested.");
             }
+            Quantity -= ToDecrease;
         }
 
         public static implicit operator Guid(InventoryItem v)

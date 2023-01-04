@@ -1,4 +1,4 @@
-﻿@page "/inventory-logs"
+﻿@page "/add-inventory-logs"
 
 @using BikeSpareInventoryManager.Data;
 @using BikeSpareInventoryManager.Data.Model;
@@ -12,53 +12,17 @@
             <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
         </ToolBarContent>
         <HeaderContent>
-            <MudTh>Item</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<InventoryLog, object>(invLog => _globalState.CurrentInventory.GetInventoryItem(invLog.ItemId).Name)">Item</MudTableSortLabel></MudTh>
             <MudTh>Quantity</MudTh>
-            <MudTh>Requested By</MudTh>
-            <MudTh>Approved By</MudTh>
-            <MudTh>Date Taken Out</MudTh>
-            <MudTh>Status</MudTh>
+            <MudTh>Added By</MudTh>
+            <MudTh>Date Added</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Item">@context.ItemId</MudTd>
+            <MudTd DataLabel="Item">@_globalState.CurrentInventory.GetInventoryItem(context.ItemId).Name</MudTd>
             <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
-            <MudTd DataLabel="Requested By">@context.RequestedBy</MudTd>
-            <MudTd DataLabel="Approved By">
-                @if (context.ApprovedBy == default)
-                {
-                    <MudText>N/A</MudText>
-                }
-                else
-                {
-                    @context.ApprovedBy
-                }
-            </MudTd>
-            <MudTd DataLabel="Date Taken Out">
-                @if (context.ApprovedAt == default)
-                {
-                    <MudText>N/A</MudText>
-                }
-                else
-                {
-                    @context.ApprovedAt
-                }
-            </MudTd>
-            <MudTd DataLabel="Approve?">
-                @if (!context.IsApproved)
-                {
-                    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
-                    {
-                        <MudButton StartIcon="@Icons.Material.Rounded.Approval" Variant="Variant.Outlined" Color="Color.Primary">Approve</MudButton>
-                    }
-                    else
-                    {
-                        <MudText>Not Approved</MudText>
-                    }
-                }
-                else
-                {
-                    <MudText>Approved</MudText>
-                }
+            <MudTd DataLabel="Added By">@UserService.GetUserFullName(context.LogAuthor)</MudTd>
+            <MudTd DataLabel="Date Added">
+                @context.LogDate.ToString("MMMM dd, yyyy")
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -84,7 +48,7 @@
     {
         if (_globalState.CurrentUser != null)
         {
-            if (_globalState.CurrentUser.UserType == UserType.Staff && !item.RequestedBy.Equals(_globalState.CurrentUser.Guid))
+            if (item.LogType == InvLogType.Withdraw)
             {
                 return false;
             }
@@ -103,6 +67,8 @@
         }
 
         _globalState.PageName = "Inventory Logs"; // Setting the pagename to display in drawer
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
 
         inventoryLogs = InventoryLogService.SetupInventoryLogs(); // Setting up the inventory for processing
     }

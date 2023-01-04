@@ -1,4 +1,5 @@
 ﻿@using BikeSpareInventoryManager.Data;
+@using BikeSpareInventoryManager.Data.Model;
 
 <MudNavMenu>
     <MudDrawerHeader Class="nav-header">
@@ -7,10 +8,21 @@
     </MudDrawerHeader>
     <MudNavLink Href="/" Icon="@Icons.Material.Rounded.Dashboard" Match="NavLinkMatch.All">Dashboard</MudNavLink>
     <MudNavLink Href="/inventory" Icon="@Icons.Material.Rounded.Inventory" Match="NavLinkMatch.All">Inventory</MudNavLink>
-    <MudNavLink Href="/users" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Users</MudNavLink>
-    <MudNavLink Href="/inventory-logs" Icon="@Icons.Material.Rounded.History" Match="NavLinkMatch.All">Inventory Logs</MudNavLink>
+    @if (_globalState.CurrentUser.UserType == UserType.Admin)
+    {
+        <MudNavLink Href="/users" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Users</MudNavLink>
+    }
+    <MudNavGroup Title="Inventory Logs" Icon="@Icons.Material.Rounded.History" Expanded="true">
+        @if (_globalState.CurrentUser.UserType == UserType.Admin)
+        {
+            <MudNavLink Href="/add-inventory-logs" Icon="@Icons.Material.Rounded.AddCircleOutline" Match="NavLinkMatch.All">Addition Logs</MudNavLink>
+        }
+        <MudNavLink Href="/withdraw-inventory-logs" Icon="@Icons.Material.Rounded.RemoveCircleOutline" Match="NavLinkMatch.All">Withdrawal Logs</MudNavLink>
+    </MudNavGroup>
 </MudNavMenu>
 
 
 @code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
 }

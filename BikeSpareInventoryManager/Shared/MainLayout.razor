@@ -23,7 +23,9 @@
             </div>
         </MudAppBar>
         <MudDrawer ClipMode="DrawerClipMode.Always" @bind-Open="@_globalState.DrawerOpen">
-            <NavMenu />
+            <CascadingValue Value="@_globalState">
+                <NavMenu />
+            </CascadingValue>
         </MudDrawer>
     }
 

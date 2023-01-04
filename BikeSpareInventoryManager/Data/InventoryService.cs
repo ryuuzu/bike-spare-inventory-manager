@@ -13,7 +13,7 @@ namespace BikeSpareInventoryManager.Data
         public static Inventory LoadInventory()
         {
             string InventoryJSON = File.ReadAllText(FilesUtils.GetInventoryFilePath());
-            return JsonSerializer.Deserialize<Inventory>(InventoryJSON);
+            return new Inventory(InventoryJSON);
         }
 
         public static void SaveInventory(Inventory CurrentInventory)
@@ -34,8 +34,7 @@ namespace BikeSpareInventoryManager.Data
             Inventory CurrentInventory;
             try
             {
-                string InventoryJSON = File.ReadAllText(FilesUtils.GetInventoryFilePath());
-                CurrentInventory = new Inventory(InventoryJSON);
+                CurrentInventory = LoadInventory();
             }
             catch (Exception)
             {

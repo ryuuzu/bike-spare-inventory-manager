@@ -51,6 +51,7 @@
 
     <ItemGroup>
       <PackageReference Include="MudBlazor" Version="6.1.6" />
+      <PackageReference Include="PSC.Blazor.Components.Chartjs" Version="6.0.35" />
     </ItemGroup>
 
 </Project>

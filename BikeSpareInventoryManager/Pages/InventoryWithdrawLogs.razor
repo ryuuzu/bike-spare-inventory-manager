@@ -1,0 +1,161 @@
+﻿@page "/withdraw-inventory-logs"
+
+@using BikeSpareInventoryManager.Data;
+@using BikeSpareInventoryManager.Data.Model;
+@using BikeSpareInventoryManager.Data.Exceptions;
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<MudContainer Class="mt-8 position-relative">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@inventoryLogs" Hover="true" Striped="false" Filter="new Func<InventoryLog,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Inventory</MudText>
+            <MudSpacer />
+            <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<InventoryLog, object>(invLog => _globalState.CurrentInventory.GetInventoryItem(invLog.ItemId).Name)">Item</MudTableSortLabel></MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Requested By</MudTh>
+            <MudTh>Approved By</MudTh>
+            <MudTh>Date Taken Out</MudTh>
+            <MudTh Style="text-align:center;">Approve?</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Item">@_globalState.CurrentInventory.GetInventoryItem(context.ItemId).Name</MudTd>
+            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+            <MudTd DataLabel="Requested By">@UserService.GetUserFullName(context.LogAuthor)</MudTd>
+            <MudTd DataLabel="Approved By">
+                @if (context.ApprovedBy == default)
+                {
+                    <MudText>N/A</MudText>
+                }
+                else
+                {
+                    @UserService.GetUserFullName(context.ApprovedBy)
+                }
+            </MudTd>
+            <MudTd DataLabel="Date Taken Out">
+                @if (context.ApprovedAt == default)
+                {
+                    <MudText>N/A</MudText>
+                }
+                else
+                {
+                    @context.ApprovedAt.ToString("MMMM dd, yyyy h:MM tt")
+                }
+            </MudTd>
+            <MudTd DataLabel="Approve?" Style="text-align:center;">
+                @if (!context.IsApproved)
+                {
+                    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+                    {
+                        <MudButton StartIcon="@Icons.Material.Rounded.Approval" OnClick="@(() => ApproveWithdrawRequest(context.Guid))" Variant="Variant.Outlined" Color="Color.Primary">Approve</MudButton>
+                    }
+                    else
+                    {
+                        <MudChip Icon="@Icons.Material.Rounded.Pending" Color="Color.Info">Pending</MudChip>
+                    }
+                }
+                else
+                {
+                    <MudChip Icon="@Icons.Material.Rounded.CheckCircle" Color="Color.Success">Approved</MudChip>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    // Global State of the Application
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+
+    private string toSearch = ""; //String to use for searching in the table
+    private InventoryLog selectedItem = null;
+
+    private IEnumerable<InventoryLog> inventoryLogs = new List<InventoryLog>();
+
+
+    private bool FilterHandler(InventoryLog item) => SearchFilter(item, toSearch);
+
+    private bool SearchFilter(InventoryLog item, string searchString)
+    {
+        if (item.LogType == InvLogType.Add)
+        {
+            return false;
+        }
+        if (_globalState.CurrentUser != null)
+        {
+            if (_globalState.CurrentUser.UserType == UserType.Staff && !item.LogAuthor.Equals(_globalState.CurrentUser.Guid))
+            {
+                return false;
+            }
+        }
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        return false;
+    }
+
+    private void ApproveWithdrawRequest(Guid logId)
+    {
+        DateTime currentTime = DateTime.Now;
+
+        if (currentTime.Hour >= 9 && currentTime.Hour < 16 && currentTime.DayOfWeek >= DayOfWeek.Monday && currentTime.DayOfWeek <= DayOfWeek.Friday)
+        {
+            try
+            {
+                _globalState.InvLogsManager.ApproveLog(logId, _globalState.CurrentUser);
+            }
+            catch (Exception ex)
+            {
+                if (ex is InvalidLogType || ex is LogAlreadyApproved)
+                {
+                    Snackbar.Add(ex.Message, Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+                    return;
+                }
+                throw;
+            }
+            try
+            {
+                InventoryLog invLog = _globalState.InvLogsManager.GetInventoryLog(logId);
+                _globalState.CurrentInventory.RemoveItemStock(invLog.ItemId, invLog.Quantity);
+            }
+            catch (Exception ex)
+            {
+                if (ex is LowItemStock || ex is ItemOutOfStock)
+                {
+                    Snackbar.Add(ex.Message, Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+                    _globalState.InvLogsManager.RemoveApproval(logId);
+                    return;
+                }
+                throw;
+            }
+            _globalState.SaveLogs();
+            _globalState.SaveInventory();
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Approve Request Blocked! Please do it between 9 am to 4 pm, Monday to Friday", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Condition check if user is not logged in.
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login"); //Navigating to login
+        }
+
+        _globalState.PageName = "Inventory Logs"; // Setting the pagename to display in drawer
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
+
+        inventoryLogs = _globalState.InvLogsManager.InventoryLogs; // Setting up the inventory for processing
+    }
+}

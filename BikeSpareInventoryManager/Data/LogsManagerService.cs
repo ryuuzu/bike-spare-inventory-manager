@@ -1,4 +1,4 @@
-﻿using BikeSpareInventoryManager.Data.Model;
+﻿ using BikeSpareInventoryManager.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +8,15 @@ using System.Threading.Tasks;
 
 namespace BikeSpareInventoryManager.Data
 {
-    public class InventoryLogService
+    public class LogsManagerService
     {
-        public static void SaveAll(List<InventoryLog> InvLogs)
+        public static LogsManager LoadLogs()
+        {
+            string InventoryLogsJSON = File.ReadAllText(FilesUtils.GetInventoryLogsFilePath());
+            return new LogsManager(InventoryLogsJSON);
+        }
+
+        public static void SaveLogs(LogsManager logsManager)
         {
             string AppDirectoryPath = FilesUtils.GetAppDirectoryPath();
             string InventoryLogsFilePath = FilesUtils.GetInventoryLogsFilePath();
@@ -20,40 +26,27 @@ namespace BikeSpareInventoryManager.Data
                 Directory.CreateDirectory(AppDirectoryPath);
             }
 
-            string UserJSON = JsonSerializer.Serialize(InvLogs);
-            File.WriteAllText(InventoryLogsFilePath, UserJSON);
+            File.WriteAllText(InventoryLogsFilePath, logsManager.GetSaveJSON());
         }
 
-        public static List<InventoryLog> LoadAll()
+        public static LogsManager SetupManager()
         {
-            string InventoryLogsJSON = File.ReadAllText(FilesUtils.GetInventoryLogsFilePath());
-            return JsonSerializer.Deserialize<List<InventoryLog>>(InventoryLogsJSON);
-        }
+            LogsManager logsManager;
 
-        public static void AddInventoryLog(InventoryLog invLog)
-        {
-            List<InventoryLog> inventoryLogs = SetupInventoryLogs();
-            inventoryLogs.Add(invLog);
-            SaveAll(inventoryLogs);
-        }
-
-        public static List<InventoryLog> SetupInventoryLogs()
-        {
-            List<InventoryLog> InventoryLogs;
             try
             {
-                InventoryLogs = LoadAll();
+                logsManager = LoadLogs();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 List<User> AllUsers = UserService.SetupUsers();
                 Inventory CurrentInventory = InventoryService.SetupInventory();
                 Random random = new Random();
-                InventoryLogs = new List<InventoryLog>();
+                List<InventoryLog> inventoryLogs = new();
                 List<InvLogType> invLogType = new() { InvLogType.Add, InvLogType.Withdraw };
                 for (int i = 0; i < 10; i++)
                 {
-                    InventoryLogs.Add(new InventoryLog
+                    inventoryLogs.Add(new InventoryLog
                     {
                         ItemId = CurrentInventory.InventoryItems[random.Next(CurrentInventory.InventoryItems.Count)].Guid,
                         Quantity = random.Next(30),
@@ -62,9 +55,12 @@ namespace BikeSpareInventoryManager.Data
                         LogType = invLogType[random.Next(2)]
                     });
                 }
-                SaveAll(InventoryLogs);
+
+                logsManager = new(inventoryLogs);
+                SaveLogs(logsManager);
             }
-            return InventoryLogs;
+
+            return logsManager;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿@page "/"
-@using BikeSpareInventoryManager.Data;
-@using BikeSpareInventoryManager.Data.Model;
+@using BikeSpareInventoryManager.Data
+@using BikeSpareInventoryManager.Data.Model
 @inject NavigationManager NavManager
 
 <MudContainer Class="mt-8 px-8" MaxWidth="MaxWidth.False">
@@ -8,30 +8,22 @@
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
                 <MudText Typo="Typo.h4">Total Items</MudText>
-                <MudText Typo="Typo.h6">@CurrentInventory.InventoryItems.Count</MudText>
+                <MudText Typo="Typo.h6">@currentInventory.InventoryItems.Count</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
                 <MudText Typo="Typo.h4">Total Users</MudText>
-                <MudText Typo="Typo.h6">@AllUsers.Count</MudText>
+                <MudText Typo="Typo.h6">@allUsers.Count</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="12" md="4">
             <MudPaper Elevation="2" Class="pa-4" Style="height: 150px;"></MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-                </MudItem>
-            </MudGrid>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
+        <MudItem xs="12">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 400px">
+                <Chart Config="_inventoryLogChartConfig" @ref="_inventoryLogChart" Height="350px"></Chart>
+            </MudPaper>
         </MudItem>
     </MudGrid>
 </MudContainer>
@@ -40,20 +32,103 @@
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
 
-    private Inventory CurrentInventory;
-    private List<User> AllUsers;
+    private Inventory currentInventory;
+    private List<User> allUsers;
+
+    private BarChartConfig _inventoryLogChartConfig;
+    private Chart _inventoryLogChart;
 
 
     protected override async Task OnInitializedAsync()
     {
-        _globalState.PageName = "Dashboard";
-
-        CurrentInventory = InventoryService.SetupInventory();
-        AllUsers = UserService.SetupUsers();
-
         if (_globalState.CurrentUser == null)
         {
             NavManager.NavigateTo("/login");
         }
+        _globalState.PageName = "Dashboard";
+
+        currentInventory = _globalState.CurrentInventory;
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
+        allUsers = UserService.SetupUsers();
+
+        CreateChart();
+    }
+
+    private void CreateChart()
+    {
+        _inventoryLogChartConfig = new BarChartConfig()
+            {
+                Options = new Options()
+                {
+                    Responsive = true,
+                    MaintainAspectRatio = false,
+                    Plugins = new Plugins()
+                    {
+                        Legend = new Legend()
+                        {
+                            Align = PSC.Blazor.Components.Chartjs.Models.Common.Align.Center,
+                            Display = false,
+                            Position = LegendPosition.Right
+                        },
+                        Title = new Title()
+                        {
+                            Position = PSC.Blazor.Components.Chartjs.Models.Common.Position.Top,
+                            Display = true,
+                            Text = "Items Taken Out",
+                            Align = PSC.Blazor.Components.Chartjs.Models.Common.Align.Center,
+                        }
+                    },
+                    Scales = new Dictionary<string, Axis>()
+            {
+                {
+                    Scales.XAxisId, new Axis()
+                    {
+                        Stacked = true,
+                        Ticks = new Ticks()
+                        {
+                            MaxRotation = 0,
+                            MinRotation = 0
+                        }
+                    }
+                },
+                {
+                    Scales.YAxisId, new Axis()
+                    {
+                        Stacked = true
+                    }
+                }
+            }
+                }
+            };
+
+        List<string> labels = new();
+        List<decimal> datasets = new();
+        List<string> colors = new();
+        Random random = new();
+
+        foreach (var inventoryLog in _globalState.InvLogsManager.GetItemsTakenOut())
+        {
+            string itemLabel = currentInventory.InventoryItems.Find(item => item.Guid == inventoryLog.Key).Name;
+
+            // Code to convert string into hexcode. Extracted from:
+            // https://www.delftstack.com/howto/csharp/csharp-convert-string-to-hex
+            string hexString = string.Join("",
+                inventoryLog.Key.ToString().Select(c => String.Format("{0:X2}", Convert.ToInt32(c)))).Substring(0, 6);
+
+            decimal quantity = inventoryLog.Value;
+            string color = $"#{hexString}";
+
+            labels.Add(itemLabel);
+            datasets.Add(quantity);
+            colors.Add(color);
+        }
+
+        _inventoryLogChartConfig.Data.Labels = labels;
+        _inventoryLogChartConfig.Data.Datasets.Add(new BarDataset()
+            {
+                Data = datasets,
+                BackgroundColor = colors,
+            });
     }
 }

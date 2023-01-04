@@ -31,6 +31,8 @@
     protected async Task OnInitializedAsync()
     {
         _globalState.PageName = "Login";
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
     }
 
     private void HandleLogin()

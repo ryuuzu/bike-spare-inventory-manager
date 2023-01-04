@@ -14,8 +14,8 @@
             <MudTextField T="string" @bind-Value="ToSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
         </ToolBarContent>
         <HeaderContent>
-            <MudTh>Username</MudTh>
-            <MudTh>Name</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<User, object>(user => user.Username)">Username</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<User, object>(user => user.FirstName + ' ' + user.LastName)">Name</MudTableSortLabel></MudTh>
             <MudTh>User Type</MudTh>
             <MudTh>Email Address</MudTh>
         </HeaderContent>
@@ -29,7 +29,10 @@
             <MudTablePager />
         </PagerContent>
     </MudTable>
-    <MudFab Class="position-absolute" Color="Color.Primary" OnClick="ToggleAddPopover" StartIcon="@Icons.Material.Filled.Add" Style="bottom:10px; right:10px;" />
+    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+    {
+        <MudFab Class="position-absolute" Color="Color.Primary" OnClick="ToggleAddPopover" StartIcon="@Icons.Material.Filled.Add" Style="bottom:10px; right:10px;" />
+    }
 </MudContainer>
 
 
@@ -127,13 +130,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _globalState.PageName = "Users";
-
-        AllUsers = UserService.SetupUsers();
-
         if (_globalState.CurrentUser == null)
         {
             NavManager.NavigateTo("/login");
         }
+        _globalState.PageName = "Users";
+
+        AllUsers = UserService.SetupUsers();
+        _globalState.RefreshInventory();
+        _globalState.RefreshLogs();
     }
 }

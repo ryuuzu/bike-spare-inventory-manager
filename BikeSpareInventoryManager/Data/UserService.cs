@@ -33,6 +33,13 @@ namespace BikeSpareInventoryManager.Data
             return UsersList;
         }
 
+        public static string GetUserFullName(Guid userId)
+        {
+            List<User> users = SetupUsers();
+            User user = users.Find(usr => usr.Guid == userId);
+            return $"{user.FirstName} {user.LastName}";
+        }
+
         public static void SaveAll(List<User> UsersList)
         {
             string AppDirectoryPath = FilesUtils.GetAppDirectoryPath();

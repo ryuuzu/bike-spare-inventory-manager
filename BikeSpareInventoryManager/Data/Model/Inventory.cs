@@ -18,6 +18,21 @@ namespace BikeSpareInventoryManager.Data.Model
             _inventoryItems = InvItems;
         }
 
+        public InventoryItem GetInventoryItem(Guid itemId)
+        {
+            return _inventoryItems.Find(invItem => invItem.Guid == itemId);
+        }
+
+        public void AddItemStock(Guid guid, int quantity)
+        {
+            _inventoryItems[_inventoryItems.FindIndex(inventoryItem => inventoryItem.Guid == guid)].Quantity += quantity;
+        }
+
+        public void RemoveItemStock(Guid guid, int quantity)
+        {
+            _inventoryItems[_inventoryItems.FindIndex(inventoryItem => inventoryItem.Guid == guid)].DecreaseQuantity(quantity);
+        }
+
         public void AddItem(InventoryItem InvItem)
         {
             _inventoryItems.Add(InvItem);
