@@ -41,27 +41,7 @@ namespace BikeSpareInventoryManager.Data
                     new InventoryItem{Name = "Mukut Digital Speedometer", Description = "MUKUT'S PRECISION MADE SPEEDOMETER TO MEASURE AND DISPLAY THE SPEED OF YOUR VEHICLE INSTANTANEOUSLY", Price = 3880.00F, Quantity = 100, CreatedAt = DateTime.Now},
                     new InventoryItem{Name = "Techlon CDI", Description = "Original Techlon Capacitor Discharge Ignition for reliable rides", Price = 3450.00F, Quantity = 100, CreatedAt = DateTime.Now},
                     new InventoryItem{Name = "Front Fork Pipe", Description = "Sanri Engineering Heavy-Duty Front\r\nFork Pipe or Front Tube that helps in a\r\ncomfortable ride & smooth\r\nhandling even on those bumpy roads", Price = 1350.00F, Quantity = 100, CreatedAt = DateTime.Now},
-                    new InventoryItem{Name = "ROLON Chain Sprocket Kit", Description = "Genuine Heavy DUTY ROLON Chain\r\nSprocket kit to provide a secure &\r\ntension free ride", Price = 1920.00F, Quantity = 100, CreatedAt = DateTime.Now},
-                    //new InventoryItem{
-                    //    Name="ROLON Chain Sprocket Kit",
-                    //    Description="",
-                    //    Price=.00F
-                    //},
-                    //new InventoryItem{
-                    //    Name="",
-                    //    Description="",
-                    //    Price=.00F
-                    //},
-                    //new InventoryItem{
-                    //    Name="", 
-                    //    Description="", 
-                    //    Price=.00F
-                    //},
-                    //new InventoryItem{
-                    //    Name="", 
-                    //    Description="", 
-                    //    Price=.00F
-                    //},
+                    new InventoryItem{Name = "ROLON Chain Sprocket Kit", Description = "Genuine Heavy DUTY ROLON Chain\r\nSprocket kit to provide a secure &\r\ntension free ride", Price = 1920.00F, Quantity = 100, CreatedAt = DateTime.Now}
                 };
                 CurrentInventory = new Inventory(inventoryItems);
                 SaveInventory(CurrentInventory);
