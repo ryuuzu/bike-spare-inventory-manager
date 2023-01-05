@@ -38,21 +38,22 @@
 
 <MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@ShowAddPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
     <EditForm Model="@_userAddForm" OnValidSubmit="ProcessUserDetails">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
+        <MudCardHeader><MudText Typo="Typo.h4">Add User</MudText></MudCardHeader>
         <MudCardContent>
             <MudTextField Label="Username" @bind-Value="_userAddForm.Username" For="@(() => _userAddForm.Username)" />
-            <MudTextField Label="FirstName" @bind-Value="_userAddForm.FirstName" For="@(() => _userAddForm.FirstName)" />
-            <MudTextField Label="LastName" @bind-Value="_userAddForm.LastName" For="@(() => _userAddForm.LastName)" />
-            <MudRadioGroup @bind-SelectedOption="_userAddForm.UserType">
+            <MudTextField Label="First Name" @bind-Value="_userAddForm.FirstName" For="@(() => _userAddForm.FirstName)" />
+            <MudTextField Label="Last Name" @bind-Value="_userAddForm.LastName" For="@(() => _userAddForm.LastName)" />
+            <MudInputLabel ForId="usertype">User Type</MudInputLabel>
+            <MudRadioGroup @bind-SelectedOption="_userAddForm.UserType" id="usertype">
                 <MudRadio Option="UserType.Staff" Color="Color.Primary">Staff</MudRadio>
                 <MudRadio Option="UserType.Admin" Color="Color.Primary">Admin</MudRadio>
             </MudRadioGroup>
             <MudTextField Label="Email" @bind-Value="_userAddForm.Email" For="@(() => _userAddForm.Email)" />
-            <MudTextField Label="Password" @bind-Value="_userAddForm.Password" For="@(() => _userAddForm.Password)" />
+            <MudTextField Label="Password" @bind-Value="_userAddForm.Password" For="@(() => _userAddForm.Password)" InputType="InputType.Password" />
         </MudCardContent>
         <MudCardActions>
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto">Add</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddPopover">Close</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="@(() => ToggleAddPopover())">Close</MudButton>
         </MudCardActions>
     </EditForm>
 </MudPopover>
@@ -105,7 +106,6 @@
         }
 
         ToggleAddPopover();
-        ResetAddForm();
     }
 
     private void ResetAddForm()
@@ -121,6 +121,7 @@
     private void ToggleAddPopover()
     {
         ShowAddPopOver = !ShowAddPopOver;
+        ResetAddForm();
     }
 
     private void RefreshUsers()

@@ -117,7 +117,6 @@
     private string toSearch = ""; //String to use for searching in the table
     private InventoryItem selectedItem = null;
 
-    private Inventory CurrentInventory;
     private IEnumerable<InventoryItem> CurrentItems = new List<InventoryItem>();
 
     private bool FilterHandler(InventoryItem item) => SearchFilter(item, toSearch);
@@ -141,11 +140,11 @@
             return;
         }
         Guid itemGuid = _activeItem ?? new Guid();
-        CurrentInventory.AddItemStock(itemGuid, quantityToAdd);
-        InventoryService.SaveInventory(CurrentInventory);
+        _globalState.CurrentInventory.AddItemStock(itemGuid, quantityToAdd);
+        _globalState.SaveInventory();
         InventoryLog invLog = new() { ItemId = itemGuid, Quantity = quantityToAdd, LogType = InvLogType.Add, LogAuthor = _globalState.CurrentUser.Guid, LogDate = DateTime.Now };
         InventoryLogService.AddInventoryLog(invLog);
-        RefreshInventory();
+        RefreshInventoryItems();
         _addQuantityForm.Reset();
         ToggleAddToStockPopover(null);
     }
@@ -163,7 +162,7 @@
         Guid itemGuid = _activeItem ?? new Guid();
         InventoryLog invLog = new() { ItemId = itemGuid, Quantity = quantityToWithdraw, LogType = InvLogType.Withdraw, LogAuthor = _globalState.CurrentUser.Guid, LogDate = DateTime.Now };
         InventoryLogService.AddInventoryLog(invLog);
-        RefreshInventory();
+        RefreshInventoryItems();
         _withdrawForm.Reset();
         ToggleWithdrawFromStockPopover(null);
         Snackbar.Add("Item has been requested.", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
@@ -182,15 +181,14 @@
         _globalState.RefreshInventory();
         _globalState.RefreshLogs();
 
-        CurrentInventory = InventoryService.SetupInventory(); // Setting up the inventory for processing
-        CurrentItems = CurrentInventory.InventoryItems; // Assigning Items stored in inventory to display in Table
+        CurrentItems = _globalState.CurrentInventory.InventoryItems; // Assigning Items stored in inventory to display in Table
     }
 
     private void ProcessItemDetails()
     {
-        CurrentInventory.AddItem(_itemAddForm.GetInventoryItem());
-        InventoryService.SaveInventory(CurrentInventory);
-        RefreshInventory();
+        _globalState.CurrentInventory.AddItem(_itemAddForm.GetInventoryItem());
+        _globalState.SaveInventory();
+        RefreshInventoryItems();
         ToggleAddItemPopover();
         ResetAddForm();
     }
@@ -221,9 +219,8 @@
         withdrawPopOver = !withdrawPopOver;
     }
 
-    private void RefreshInventory()
+    private void RefreshInventoryItems()
     {
-        CurrentInventory = InventoryService.SetupInventory();
-        CurrentItems = CurrentInventory.InventoryItems;
+        CurrentItems = _globalState.CurrentInventory.InventoryItems;
     }
 }

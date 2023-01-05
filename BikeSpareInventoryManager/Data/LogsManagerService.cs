@@ -1,10 +1,4 @@
-﻿ using BikeSpareInventoryManager.Data.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using BikeSpareInventoryManager.Data.Model;
 
 namespace BikeSpareInventoryManager.Data
 {
@@ -37,7 +31,7 @@ namespace BikeSpareInventoryManager.Data
             {
                 logsManager = LoadLogs();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 List<User> AllUsers = UserService.SetupUsers();
                 Inventory CurrentInventory = InventoryService.SetupInventory();

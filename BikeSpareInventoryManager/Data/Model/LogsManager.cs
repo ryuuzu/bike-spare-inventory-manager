@@ -1,11 +1,5 @@
 ﻿using BikeSpareInventoryManager.Data.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace BikeSpareInventoryManager.Data.Model
 {
@@ -14,6 +8,8 @@ namespace BikeSpareInventoryManager.Data.Model
         private List<InventoryLog> _inventoryLogs;
 
         public List<InventoryLog> InventoryLogs { get { return _inventoryLogs; } }
+
+        public int PendingLogsCount { get { return _inventoryLogs.Where(invLog => invLog.LogType == InvLogType.Withdraw && !invLog.IsApproved).ToList().Count; } }
 
         public LogsManager(List<InventoryLog> inventoryLogs)
         {
@@ -24,7 +20,6 @@ namespace BikeSpareInventoryManager.Data.Model
         {
             return JsonSerializer.Serialize(InventoryLogs);
         }
-
         public DateTime GetLastUpdatedDate(Guid itemId)
         {
             List<InventoryLog> itemLogs = _inventoryLogs.Where(invLog => invLog.ItemId == itemId).ToList();

@@ -6,8 +6,8 @@
 
 
 <MudForm @ref="LoginForm" Class="login-form">
-    <MudCard Elevation="3">
-        <MudCardHeader><MudText Typo="Typo.h4">Login</MudText></MudCardHeader>
+    <MudCard Elevation="3" Class="py-5">
+        <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Janata Garage - Login</MudText></MudCardHeader>
         <MudCardContent>
             <MudTextField @bind-Value="Username" T="string" Required="true" Label="Username" RequiredError="Username is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="Password" T="string" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Variant="Variant.Outlined" />

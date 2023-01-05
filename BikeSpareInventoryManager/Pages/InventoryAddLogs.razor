@@ -70,6 +70,6 @@
         _globalState.RefreshInventory();
         _globalState.RefreshLogs();
 
-        inventoryLogs = InventoryLogService.SetupInventoryLogs(); // Setting up the inventory for processing
+        inventoryLogs = _globalState.InvLogsManager.InventoryLogs; // Setting up the inventory for processing
     }
 }

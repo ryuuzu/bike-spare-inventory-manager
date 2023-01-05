@@ -1,11 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-windows10.0.19041.0)'
+Before:
+using System;
+After:
+using BikeSpareInventoryManager.Data;
+using BikeSpareInventoryManager.Data.Model;
+using System;
+*/
+
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-ios)'
+Before:
+using System;
+After:
+using BikeSpareInventoryManager.Data;
+using BikeSpareInventoryManager.Data.Model;
+using System;
+*/
+
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-android)'
+Before:
+using System;
+After:
+using BikeSpareInventoryManager.Data;
+using BikeSpareInventoryManager.Data.Model;
+using System;
+*/
+using BikeSpareInventoryManager.Data.Model;
 using System.Text.Json;
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-windows10.0.19041.0)'
+Before:
 using System.Threading.Tasks;
 using BikeSpareInventoryManager.Data;
 using BikeSpareInventoryManager.Data.Model;
+After:
+using System.Threading.Tasks;
+*/
+
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-ios)'
+Before:
+using System.Threading.Tasks;
+using BikeSpareInventoryManager.Data;
+using BikeSpareInventoryManager.Data.Model;
+After:
+using System.Threading.Tasks;
+*/
+
+/* Unmerged change from project 'BikeSpareInventoryManager (net6.0-android)'
+Before:
+using System.Threading.Tasks;
+using BikeSpareInventoryManager.Data;
+using BikeSpareInventoryManager.Data.Model;
+After:
+using System.Threading.Tasks;
+*/
+
 
 namespace BikeSpareInventoryManager.Data
 {

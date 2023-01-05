@@ -5,24 +5,30 @@
 
 <MudContainer Class="mt-8 px-8" MaxWidth="MaxWidth.False">
     <MudGrid>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
-                <MudText Typo="Typo.h4">Total Items</MudText>
-                <MudText Typo="Typo.h6">@currentInventory.InventoryItems.Count</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
-                <MudText Typo="Typo.h4">Total Users</MudText>
-                <MudText Typo="Typo.h6">@allUsers.Count</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 150px;"></MudPaper>
-        </MudItem>
+        @if (_globalState.CurrentUser != null && _globalState.CurrentUser.UserType == UserType.Admin)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
+                    <MudText Typo="Typo.h5">Total Items</MudText>
+                    <MudText Typo="Typo.h6">@_globalState.CurrentInventory.InventoryItems.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
+                    <MudText Typo="Typo.h5">Total Users</MudText>
+                    <MudText Typo="Typo.h6">@allUsers.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4">
+                <MudPaper Elevation="2" Class="d-flex gap-4 flex-column align-center justify-center mud-width-full py-8" Style="height: 150px;">
+                    <MudText Typo="Typo.h5">Total Pending Withdrawals</MudText>
+                    <MudText Typo="Typo.h6">@_globalState.InvLogsManager.PendingLogsCount</MudText>
+                </MudPaper>
+            </MudItem>
+        }
         <MudItem xs="12">
-            <MudPaper Elevation="2" Class="pa-4" Style="height: 400px">
-                <Chart Config="_inventoryLogChartConfig" @ref="_inventoryLogChart" Height="350px"></Chart>
+            <MudPaper Elevation="2" Class="pa-4" Height="@chartHeight">
+                <Chart Config="_inventoryLogChartConfig" @ref="_inventoryLogChart" Height="100%"></Chart>
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -32,7 +38,8 @@
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
 
-    private Inventory currentInventory;
+    private string chartHeight = "400px";
+
     private List<User> allUsers;
 
     private BarChartConfig _inventoryLogChartConfig;
@@ -47,10 +54,14 @@
         }
         _globalState.PageName = "Dashboard";
 
-        currentInventory = _globalState.CurrentInventory;
         _globalState.RefreshInventory();
         _globalState.RefreshLogs();
         allUsers = UserService.SetupUsers();
+
+        if (_globalState.CurrentUser != null)
+        {
+            chartHeight = _globalState.CurrentUser.UserType == UserType.Admin ? "400px" : "600px";
+        }
 
         CreateChart();
     }
@@ -109,15 +120,17 @@
 
         foreach (var inventoryLog in _globalState.InvLogsManager.GetItemsTakenOut())
         {
-            string itemLabel = currentInventory.InventoryItems.Find(item => item.Guid == inventoryLog.Key).Name;
+            string itemLabel = _globalState.CurrentInventory.InventoryItems.Find(item => item.Guid == inventoryLog.Key).Name;
 
             // Code to convert string into hexcode. Extracted from:
             // https://www.delftstack.com/howto/csharp/csharp-convert-string-to-hex
             string hexString = string.Join("",
-                inventoryLog.Key.ToString().Select(c => String.Format("{0:X2}", Convert.ToInt32(c)))).Substring(0, 6);
+                itemLabel.Select(c => String.Format("{0:X2}", Convert.ToInt32(c))));
+
+            string hexColorCode = hexString.Substring(hexString.Length - 7, 6);
 
             decimal quantity = inventoryLog.Value;
-            string color = $"#{hexString}";
+            string color = $"#{hexColorCode}";
 
             labels.Add(itemLabel);
             datasets.Add(quantity);
