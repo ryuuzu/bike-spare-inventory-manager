@@ -18,7 +18,7 @@
             <MudTh>Quantity</MudTh>
             <MudTh>Requested By</MudTh>
             <MudTh>Approved By</MudTh>
-            <MudTh>Date Taken Out</MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<InventoryLog, object>(invLog => invLog.ApprovedAt)">Date Taken Out</MudTableSortLabel></MudTh>
             <MudTh Style="text-align:center;">Approve?</MudTh>
         </HeaderContent>
         <RowTemplate>

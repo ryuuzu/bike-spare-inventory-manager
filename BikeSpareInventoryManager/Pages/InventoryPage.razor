@@ -215,8 +215,18 @@
 
     private void ToggleWithdrawFromStockPopover(Guid? guid)
     {
-        _activeItem = guid;
-        withdrawPopOver = !withdrawPopOver;
+
+        DateTime currentTime = DateTime.Now;
+
+        if (currentTime.Hour >= 9 && currentTime.Hour < 16 && currentTime.DayOfWeek >= DayOfWeek.Monday && currentTime.DayOfWeek <= DayOfWeek.Friday)
+        {
+            _activeItem = guid;
+            withdrawPopOver = !withdrawPopOver;
+        }
+        else
+        {
+            Snackbar.Add("Withdraw Request Blocked! Please do it between 9 am to 4 pm, Monday to Friday", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
     }
 
     private void RefreshInventoryItems()
